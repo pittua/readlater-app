@@ -6,6 +6,7 @@ import com.yomiato.data.ai.SecureKeyStore
 import com.yomiato.data.repository.ArticleRepository
 import com.yomiato.data.settings.AppSettings
 import com.yomiato.data.settings.SettingsRepository
+import com.yomiato.data.settings.SummaryEngine
 import com.yomiato.data.settings.ThemeMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -45,6 +46,8 @@ class SettingsViewModel @Inject constructor(
     fun setFontScale(scale: Float) = viewModelScope.launch { settingsRepository.setFontScale(scale) }
     fun setLineHeightScale(scale: Float) = viewModelScope.launch { settingsRepository.setLineHeightScale(scale) }
     fun setAutoMarkRead(enabled: Boolean) = viewModelScope.launch { settingsRepository.setAutoMarkRead(enabled) }
+
+    fun setSummaryEngine(engine: SummaryEngine) = viewModelScope.launch { settingsRepository.setSummaryEngine(engine) }
 
     fun clearAllData() = viewModelScope.launch { articleRepository.deleteAllArticles() }
 }

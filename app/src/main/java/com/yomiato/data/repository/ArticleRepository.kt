@@ -14,6 +14,7 @@ import com.yomiato.data.local.relation.TagWithCount
 import com.yomiato.data.ai.AiClient
 import com.yomiato.data.ai.AiException
 import com.yomiato.data.ai.AiOutcome
+import com.yomiato.data.ai.LocalSummarizer
 import com.yomiato.data.ai.SecureKeyStore
 import com.yomiato.data.offline.OfflineArchiver
 import com.yomiato.data.remote.ArticleFetcher
@@ -36,6 +37,7 @@ class ArticleRepository @Inject constructor(
     private val fetcher: ArticleFetcher,
     private val offlineArchiver: OfflineArchiver,
     private val aiClient: AiClient,
+    private val localSummarizer: LocalSummarizer,
     private val secureKeyStore: SecureKeyStore,
 ) {
     // ---- 一覧 ----
@@ -164,28 +166,44 @@ class ArticleRepository @Inject constructor(
     fun hasAiKey(): Boolean = secureKeyStore.hasAnthropicKey()
 
     /**
-     * 記事を AI で要約し、タグ候補を取得する。要約は即 DB に保存し、タグ候補は UI 側で承認して付与する。
+     * 記事を要約し、タグ候補を取得する。要約は即 DB に保存し、タグ候補は UI 側で承認して付与する。
+     *
+     * @param useCloud true なら Claude API（高品質・要キー）、false なら端末内の抽出要約（無料・オフライン）。
      */
-    suspend fun summarizeAndTag(articleId: Long): AiOutcome {
-        if (!secureKeyStore.hasAnthropicKey()) return AiOutcome.NoKey
+    suspend fun summarizeAndTag(articleId: Long, useCloud: Boolean): AiOutcome {
         val article = articleDao.getById(articleId) ?: return AiOutcome.Error("記事が見つかりません")
         val text = (article.contentText ?: article.excerpt ?: article.title)
             ?.takeIf { it.isNotBlank() }
             ?: return AiOutcome.Error("要約できる本文がありません")
+        val existing = tagDao.getAllNames()
 
-        return try {
-            val existing = tagDao.getAllNames()
-            val result = aiClient.summarizeAndTag(
-                title = article.title.orEmpty(),
-                text = text.take(8000),
-                existingTags = existing,
-            )
-            articleDao.setSummary(articleId, result.summary, AiClient.MODEL, System.currentTimeMillis())
-            AiOutcome.Success(result.summary, result.tags)
-        } catch (e: AiException) {
-            AiOutcome.Error(e.message ?: "AI エラー")
-        } catch (e: Exception) {
-            AiOutcome.Error("通信エラー: ${e.message}")
+        return if (useCloud) {
+            if (!secureKeyStore.hasAnthropicKey()) return AiOutcome.NoKey
+            try {
+                val result = aiClient.summarizeAndTag(
+                    title = article.title.orEmpty(),
+                    text = text.take(8000),
+                    existingTags = existing,
+                )
+                articleDao.setSummary(articleId, result.summary, AiClient.MODEL, System.currentTimeMillis())
+                AiOutcome.Success(result.summary, result.tags)
+            } catch (e: AiException) {
+                AiOutcome.Error(e.message ?: "AI エラー")
+            } catch (e: Exception) {
+                AiOutcome.Error("通信エラー: ${e.message}")
+            }
+        } else {
+            try {
+                val result = localSummarizer.summarizeAndTag(
+                    title = article.title.orEmpty(),
+                    text = text.take(20000),
+                    existingTags = existing,
+                )
+                articleDao.setSummary(articleId, result.summary, "端末内（抽出要約）", System.currentTimeMillis())
+                AiOutcome.Success(result.summary, result.tags)
+            } catch (e: Exception) {
+                AiOutcome.Error("要約に失敗しました: ${e.message}")
+            }
         }
     }
 

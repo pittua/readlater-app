@@ -53,11 +53,12 @@ class ReaderViewModel @Inject constructor(
 
     val hasAiKey: Boolean get() = repository.hasAiKey()
 
-    /** AI で要約＋タグ提案。要約は保存され、タグ候補は [suggestedTags] に提示される。 */
+    /** 要約＋タグ提案。要約は保存され、タグ候補は [suggestedTags] に提示される。エンジンは設定に従う。 */
     fun summarize() {
         viewModelScope.launch {
             _busy.value = true
-            when (val outcome = repository.summarizeAndTag(articleId)) {
+            val useCloud = settings.value.summaryEngine == com.yomiato.data.settings.SummaryEngine.CLOUD
+            when (val outcome = repository.summarizeAndTag(articleId, useCloud)) {
                 is AiOutcome.Success -> {
                     _suggestedTags.value = outcome.suggestedTags
                     _messages.send("要約しました")

@@ -42,6 +42,18 @@ android {
     buildFeatures {
         compose = true
     }
+
+    packaging {
+        resources {
+            // 依存ライブラリ（kuromoji 等）間で重複する META-INF を除外
+            excludes += setOf(
+                "META-INF/*.md",
+                "META-INF/*.txt",
+                "META-INF/{AL2.0,LGPL2.1}",
+                "META-INF/DEPENDENCIES",
+            )
+        }
+    }
 }
 
 // Room のスキーマ JSON 出力先（マイグレーション管理用）
@@ -92,6 +104,9 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.jsoup)
     implementation(libs.readability4j)
+
+    // 端末内の要約・タグ抽出（形態素解析）
+    implementation(libs.kuromoji.ipadic)
 
     // 画像
     implementation(libs.coil.compose)

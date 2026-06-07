@@ -29,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.yomiato.data.settings.SummaryEngine
 import com.yomiato.data.settings.ThemeMode
 
 /** S-7: 設定。表示（テーマ/フォント/行間）・動作（自動既読）・データ（全削除）。 */
@@ -117,6 +118,20 @@ fun SettingsScreen(
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             SectionHeader("AI（要約・タグ）")
 
+            SettingLabel("要約エンジン")
+            EngineRow(
+                label = "端末内（無料・オフライン）",
+                sub = "形態素解析で重要文を抜き出す抽出要約。全端末で動作。",
+                selected = settings.summaryEngine == SummaryEngine.LOCAL,
+                onClick = { viewModel.setSummaryEngine(SummaryEngine.LOCAL) },
+            )
+            EngineRow(
+                label = "Claude API（高品質）",
+                sub = "流暢な要約。API キーが必要で、本文が外部に送信されます。",
+                selected = settings.summaryEngine == SummaryEngine.CLOUD,
+                onClick = { viewModel.setSummaryEngine(SummaryEngine.CLOUD) },
+            )
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -125,8 +140,8 @@ fun SettingsScreen(
             ) {
                 Text("Anthropic API キー", style = MaterialTheme.typography.bodyLarge)
                 Text(
-                    if (hasApiKey) "設定済み（タップで変更）。記事をAIで要約・タグ付けできます。"
-                    else "未設定。キーを入れると記事の要約・タグ提案が使えます（本文が外部APIに送信されます）。",
+                    if (hasApiKey) "設定済み（タップで変更）。「Claude API」選択時に使われます。"
+                    else "未設定。「Claude API」を使う場合に入力してください（本文が外部APIに送信されます）。",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -239,6 +254,27 @@ private fun SectionHeader(title: String) {
         color = MaterialTheme.colorScheme.primary,
         modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
     )
+}
+
+@Composable
+private fun EngineRow(label: String, sub: String, selected: Boolean, onClick: () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 24.dp, vertical = 6.dp),
+    ) {
+        RadioButton(selected = selected, onClick = onClick)
+        Column(modifier = Modifier.padding(start = 4.dp)) {
+            Text(label, style = MaterialTheme.typography.bodyLarge)
+            Text(
+                sub,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
 }
 
 @Composable

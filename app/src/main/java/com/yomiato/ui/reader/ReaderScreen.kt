@@ -220,7 +220,7 @@ private fun ReaderContent(
     modifier: Modifier = Modifier,
 ) {
     val dark = androidx.compose.foundation.isSystemInDarkTheme()
-    val html = remember(article.article.id, contentHtml, settings, dark) {
+    val html = remember(article.article.id, contentHtml, article.article.summary, settings, dark) {
         buildReaderHtml(
             title = article.article.title,
             siteName = article.article.siteName ?: article.article.domain,

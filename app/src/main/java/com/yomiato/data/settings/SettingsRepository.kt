@@ -24,8 +24,14 @@ class SettingsRepository @Inject constructor(
             readerFontScale = prefs[KEY_FONT_SCALE] ?: 1.0f,
             readerLineHeightScale = prefs[KEY_LINE_HEIGHT] ?: 1.0f,
             autoMarkRead = prefs[KEY_AUTO_MARK_READ] ?: true,
+            summaryEngine = prefs[KEY_SUMMARY_ENGINE]
+                ?.let { runCatching { SummaryEngine.valueOf(it) }.getOrNull() }
+                ?: SummaryEngine.LOCAL,
         )
     }
+
+    suspend fun setSummaryEngine(engine: SummaryEngine) =
+        dataStore.edit { it[KEY_SUMMARY_ENGINE] = engine.name }
 
     suspend fun setThemeMode(mode: ThemeMode) =
         dataStore.edit { it[KEY_THEME_MODE] = mode.name }
@@ -48,5 +54,6 @@ class SettingsRepository @Inject constructor(
         val KEY_FONT_SCALE = floatPreferencesKey("reader_font_scale")
         val KEY_LINE_HEIGHT = floatPreferencesKey("reader_line_height")
         val KEY_AUTO_MARK_READ = booleanPreferencesKey("auto_mark_read")
+        val KEY_SUMMARY_ENGINE = stringPreferencesKey("summary_engine")
     }
 }

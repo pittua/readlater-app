@@ -1,5 +1,6 @@
 package com.yomiato.ui
 
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -69,7 +70,11 @@ fun YomiatoAppRoot() {
         NavHost(
             navController = navController,
             startDestination = TopDestination.Inbox.route,
-            modifier = Modifier.padding(innerPadding),
+            // 外側 Scaffold が適用したインセットを消費し、各画面の内側 Scaffold が
+            // ステータスバー余白を二重に付けて上部に隙間ができるのを防ぐ。
+            modifier = Modifier
+                .padding(innerPadding)
+                .consumeWindowInsets(innerPadding),
         ) {
             // ---- トップレベル ----
             composable(TopDestination.Inbox.route) {

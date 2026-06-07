@@ -87,6 +87,23 @@ interface ArticleDao {
     @Query("UPDATE articles SET folderId = :folderId, updatedAt = :now WHERE id = :id")
     suspend fun setFolder(id: Long, folderId: Long?, now: Long = System.currentTimeMillis())
 
+    @Query("UPDATE articles SET offlineContentHtml = :html, updatedAt = :now WHERE id = :id")
+    suspend fun setOfflineContent(id: Long, html: String?, now: Long = System.currentTimeMillis())
+
+    @Query("UPDATE articles SET snapshotPath = :path, updatedAt = :now WHERE id = :id")
+    suspend fun setSnapshotPath(id: Long, path: String?, now: Long = System.currentTimeMillis())
+
+    @Query(
+        "UPDATE articles SET summary = :summary, summaryModel = :model, summarizedAt = :at, updatedAt = :now WHERE id = :id",
+    )
+    suspend fun setSummary(
+        id: Long,
+        summary: String?,
+        model: String?,
+        at: Long?,
+        now: Long = System.currentTimeMillis(),
+    )
+
     @Query("UPDATE articles SET createdAt = :now, updatedAt = :now WHERE id = :id")
     suspend fun bumpToTop(id: Long, now: Long = System.currentTimeMillis())
 

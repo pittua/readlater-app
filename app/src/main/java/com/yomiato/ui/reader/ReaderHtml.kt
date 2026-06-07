@@ -14,6 +14,7 @@ fun buildReaderHtml(
     fontScale: Float,
     lineHeightScale: Float,
     dark: Boolean,
+    summary: String? = null,
 ): String {
     val basePx = 18
     val fontPx = (basePx * fontScale).coerceIn(12f, 36f)
@@ -30,12 +31,23 @@ fun buildReaderHtml(
         formatReadMinutes(readMinutes)?.let { add(it) }
     }.joinToString(" ・ ")
 
+    val accent = if (dark) "#80B7FF" else "#1F6FEB"
+    val summaryBg = if (dark) "#15233A" else "#EAF2FF"
+
     val titleBlock = buildString {
         if (!title.isNullOrBlank()) {
             append("<h1 class=\"yomiato-title\">").append(escapeHtml(title)).append("</h1>")
         }
         if (meta.isNotEmpty()) {
             append("<div class=\"yomiato-meta\">").append(meta).append("</div>")
+        }
+        if (!summary.isNullOrBlank()) {
+            append("<div class=\"yomiato-summary\">")
+            append("<div class=\"yomiato-summary-label\">AI 要約</div>")
+            append(escapeHtml(summary).replace("\n", "<br/>"))
+            append("</div>")
+        }
+        if (meta.isNotEmpty() || !summary.isNullOrBlank()) {
             append("<hr class=\"yomiato-rule\"/>")
         }
     }
@@ -61,6 +73,8 @@ fun buildReaderHtml(
           }
           .yomiato-title { font-size: 1.5em; line-height: 1.35; margin: 0 0 8px 0; }
           .yomiato-meta { color: $mutedColor; font-size: 0.8em; margin-bottom: 12px; }
+          .yomiato-summary { background: $summaryBg; border-left: 3px solid $accent; border-radius: 8px; padding: 12px 14px; margin: 4px 0 16px 0; font-size: 0.95em; }
+          .yomiato-summary-label { color: $accent; font-size: 0.75em; font-weight: bold; margin-bottom: 6px; letter-spacing: 0.04em; }
           .yomiato-rule { border: none; border-top: 1px solid $ruleColor; margin: 0 0 20px 0; }
           img, video, iframe { max-width: 100%; height: auto; border-radius: 6px; }
           a { color: $linkColor; }

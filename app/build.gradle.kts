@@ -85,6 +85,9 @@ dependencies {
     implementation(libs.datastore.preferences)
     implementation(libs.work.runtime.ktx)
 
+    // APIキーの暗号化保存
+    implementation(libs.androidx.security.crypto)
+
     // ネットワーク / 本文抽出
     implementation(libs.okhttp)
     implementation(libs.jsoup)

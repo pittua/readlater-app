@@ -11,9 +11,15 @@ import com.yomiato.data.local.entity.TagEntity
 import com.yomiato.data.local.relation.ArticleWithTags
 import com.yomiato.data.local.relation.FolderWithCount
 import com.yomiato.data.local.relation.TagWithCount
+import com.yomiato.data.ai.AiClient
+import com.yomiato.data.ai.AiException
+import com.yomiato.data.ai.AiOutcome
+import com.yomiato.data.ai.SecureKeyStore
+import com.yomiato.data.offline.OfflineArchiver
 import com.yomiato.data.remote.ArticleFetcher
 import com.yomiato.data.util.UrlUtils
 import kotlinx.coroutines.flow.Flow
+import java.io.File
 import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -28,6 +34,9 @@ class ArticleRepository @Inject constructor(
     private val tagDao: TagDao,
     private val folderDao: FolderDao,
     private val fetcher: ArticleFetcher,
+    private val offlineArchiver: OfflineArchiver,
+    private val aiClient: AiClient,
+    private val secureKeyStore: SecureKeyStore,
 ) {
     // ---- 一覧 ----
     fun observeInbox(): Flow<List<ArticleWithTags>> = articleDao.observeInbox()
@@ -116,8 +125,69 @@ class ArticleRepository @Inject constructor(
     suspend fun setArchived(id: Long, archived: Boolean) = articleDao.setArchived(id, archived)
     suspend fun setFavorite(id: Long, favorite: Boolean) = articleDao.setFavorite(id, favorite)
     suspend fun setFolder(id: Long, folderId: Long?) = articleDao.setFolder(id, folderId)
-    suspend fun deleteArticle(id: Long) = articleDao.delete(id)
+
+    suspend fun deleteArticle(id: Long) {
+        offlineArchiver.deleteArtifacts(id)
+        articleDao.delete(id)
+    }
+
     suspend fun deleteAllArticles() = articleDao.deleteAll()
+
+    // ---- オフライン保存 ----
+
+    /**
+     * 本文中の画像をローカル（data URI）に埋め込み、通信なしで読める状態にする。
+     * 本文（contentHtml）が無い記事は対象外（スナップショット [snapshotFileFor] を使う）。
+     */
+    suspend fun saveOffline(articleId: Long): Boolean {
+        val article = articleDao.getById(articleId) ?: return false
+        val html = article.contentHtml ?: return false
+        val embedded = offlineArchiver.embedImages(html)
+        articleDao.setOfflineContent(articleId, embedded)
+        return true
+    }
+
+    suspend fun clearOffline(articleId: Long) {
+        articleDao.setOfflineContent(articleId, null)
+    }
+
+    /** スナップショット（MHTML）の保存先ファイル。UI 側の WebView が saveWebArchive で書き出す。 */
+    fun snapshotFileFor(articleId: Long): File = offlineArchiver.snapshotFile(articleId)
+
+    /** スナップショット書き出し完了後に DB へパスを記録する。 */
+    suspend fun setSnapshotSaved(articleId: Long, path: String) {
+        articleDao.setSnapshotPath(articleId, path)
+    }
+
+    // ---- AI 要約・タグ ----
+
+    fun hasAiKey(): Boolean = secureKeyStore.hasAnthropicKey()
+
+    /**
+     * 記事を AI で要約し、タグ候補を取得する。要約は即 DB に保存し、タグ候補は UI 側で承認して付与する。
+     */
+    suspend fun summarizeAndTag(articleId: Long): AiOutcome {
+        if (!secureKeyStore.hasAnthropicKey()) return AiOutcome.NoKey
+        val article = articleDao.getById(articleId) ?: return AiOutcome.Error("記事が見つかりません")
+        val text = (article.contentText ?: article.excerpt ?: article.title)
+            ?.takeIf { it.isNotBlank() }
+            ?: return AiOutcome.Error("要約できる本文がありません")
+
+        return try {
+            val existing = tagDao.getAllNames()
+            val result = aiClient.summarizeAndTag(
+                title = article.title.orEmpty(),
+                text = text.take(8000),
+                existingTags = existing,
+            )
+            articleDao.setSummary(articleId, result.summary, AiClient.MODEL, System.currentTimeMillis())
+            AiOutcome.Success(result.summary, result.tags)
+        } catch (e: AiException) {
+            AiOutcome.Error(e.message ?: "AI エラー")
+        } catch (e: Exception) {
+            AiOutcome.Error("通信エラー: ${e.message}")
+        }
+    }
 
     // ---- タグ ----
     fun observeTags(): Flow<List<TagWithCount>> = tagDao.observeAllWithCount()

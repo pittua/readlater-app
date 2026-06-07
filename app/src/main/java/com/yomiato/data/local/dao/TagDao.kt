@@ -42,6 +42,9 @@ interface TagDao {
     @Query("SELECT * FROM tags WHERE name = :name LIMIT 1")
     suspend fun getByName(name: String): TagEntity?
 
+    @Query("SELECT name FROM tags ORDER BY name")
+    suspend fun getAllNames(): List<String>
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(tag: TagEntity): Long
 

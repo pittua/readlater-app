@@ -35,6 +35,13 @@ data class ArticleEntity(
     val contentHtml: String? = null,
     val contentText: String? = null,
     val estimatedReadMinutes: Int? = null,
+    // AI 要約（本文は上書きせず別フィールドで保持）
+    val summary: String? = null,
+    val summaryModel: String? = null,
+    val summarizedAt: Long? = null,
+    // オフライン保存。画像をローカル化した本文 / ページ丸ごとの MHTML スナップショットのパス
+    val offlineContentHtml: String? = null,
+    val snapshotPath: String? = null,
     val folderId: Long? = null,
     val isRead: Boolean = false,
     val isArchived: Boolean = false,

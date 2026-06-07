@@ -21,9 +21,8 @@ object DatabaseModule {
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase =
         Room.databaseBuilder(context, AppDatabase::class.java, AppDatabase.NAME)
-            // 開発初期はスキーマ変更が頻繁なため破壊的マイグレーションを許容。
-            // リリース前に Migration を明示実装する。
-            .fallbackToDestructiveMigration()
+            // 列追加では保存記事を失わないよう、正式な Migration を実装して適用する。
+            .addMigrations(AppDatabase.MIGRATION_1_2)
             .build()
 
     @Provides

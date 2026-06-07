@@ -39,7 +39,9 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
+    val hasApiKey by viewModel.hasApiKey.collectAsStateWithLifecycle()
     var showClearConfirm by remember { mutableStateOf(false) }
+    var showApiKeyDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier,
@@ -113,6 +115,35 @@ fun SettingsScreen(
             )
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            SectionHeader("AI（要約・タグ）")
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showApiKeyDialog = true }
+                    .padding(horizontal = 24.dp, vertical = 12.dp),
+            ) {
+                Text("Anthropic API キー", style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    if (hasApiKey) "設定済み（タップで変更）。記事をAIで要約・タグ付けできます。"
+                    else "未設定。キーを入れると記事の要約・タグ提案が使えます（本文が外部APIに送信されます）。",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            if (hasApiKey) {
+                Text(
+                    text = "API キーを削除",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { viewModel.clearApiKey() }
+                        .padding(horizontal = 24.dp, vertical = 10.dp),
+                )
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             SectionHeader("データ")
 
             Text(
@@ -153,6 +184,51 @@ fun SettingsScreen(
             },
         )
     }
+
+    if (showApiKeyDialog) {
+        ApiKeyDialog(
+            onSave = { viewModel.setApiKey(it); showApiKeyDialog = false },
+            onDismiss = { showApiKeyDialog = false },
+        )
+    }
+}
+
+@Composable
+private fun ApiKeyDialog(
+    onSave: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var key by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Anthropic API キー") },
+        text = {
+            Column {
+                Text(
+                    "console.anthropic.com で発行したキー（sk-ant-…）を貼り付けてください。" +
+                        "キーは端末内に暗号化保存され、AI要約時のみ Anthropic に送信されます。",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                androidx.compose.material3.OutlinedTextField(
+                    value = key,
+                    onValueChange = { key = it },
+                    label = { Text("sk-ant-...") },
+                    singleLine = true,
+                    visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onSave(key) }, enabled = key.isNotBlank()) { Text("保存") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("キャンセル") }
+        },
+    )
 }
 
 @Composable

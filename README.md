@@ -21,6 +21,18 @@
 
 ---
 
+## 📱 スクリーンショット
+
+<div align="center">
+
+| 受信トレイ | 元ページ表示 | AI 要約 | 設定 |
+| :--: | :--: | :--: | :--: |
+| <img src="docs/screenshots/inbox.png" width="190"/> | <img src="docs/screenshots/reader.png" width="190"/> | <img src="docs/screenshots/summary.png" width="190"/> | <img src="docs/screenshots/settings.png" width="190"/> |
+
+</div>
+
+---
+
 ## ✨ できること
 
 | | 機能 |

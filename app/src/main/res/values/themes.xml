@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Compose 利用のため、アプリ全体は親なしの軽量テーマにする。
+         実際の配色は Compose 側の YomiatoTheme で行う。 -->
+    <style name="Theme.Yomiato" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>

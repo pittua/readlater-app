@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Yomiato</string>
+
+    <!-- ボトムナビ -->
+    <string name="nav_inbox">受信トレイ</string>
+    <string name="nav_folders">フォルダ</string>
+    <string name="nav_tags">タグ</string>
+    <string name="nav_search">検索</string>
+    <string name="nav_settings">設定</string>
+
+    <!-- 共通 -->
+    <string name="add_url">URLを追加</string>
+    <string name="empty_inbox">保存した記事がここに表示されます。\n共有から追加してみましょう。</string>
+</resources>

@@ -104,7 +104,10 @@ class LocalSummarizer @Inject constructor() {
     /** タグ候補を正規化。ASCII語は小文字化＋英語ストップワード除外（kuromoji が英語を名詞化する分も弾く）。日本語はそのまま。 */
     private fun normalizeTerm(s: String): String? {
         val isAscii = s.all { it.code < 128 }
-        if (!isAscii) return s.takeIf { it.length >= 2 }
+        if (!isAscii) {
+            // 記号のみ（「｜。」等）を除外し、文字を1つ以上含むものだけ採用
+            return s.takeIf { it.length >= 2 && it.any { c -> c.isLetter() } }
+        }
         val low = s.lowercase(Locale.ROOT)
         return if (low.length < 3 || low in EN_STOP || !low.first().isLetter()) null else low
     }

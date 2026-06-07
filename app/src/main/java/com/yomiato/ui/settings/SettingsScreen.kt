@@ -13,7 +13,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -85,24 +84,6 @@ fun SettingsScreen(
                 subtitle = "壁紙から配色（Android 12+）",
                 checked = settings.dynamicColor,
                 onCheckedChange = viewModel::setDynamicColor,
-            )
-
-            SliderRow(
-                title = "本文フォントサイズ",
-                value = settings.readerFontScale,
-                valueRange = 0.8f..1.6f,
-                steps = 7,
-                valueLabel = "${(settings.readerFontScale * 100).toInt()}%",
-                onValueChange = viewModel::setFontScale,
-            )
-
-            SliderRow(
-                title = "本文の行間",
-                value = settings.readerLineHeightScale,
-                valueRange = 0.8f..1.5f,
-                steps = 6,
-                valueLabel = "${(settings.readerLineHeightScale * 100).toInt()}%",
-                onValueChange = viewModel::setLineHeightScale,
             )
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
@@ -311,28 +292,5 @@ private fun SwitchRow(
             }
         }
         Switch(checked = checked, onCheckedChange = onCheckedChange)
-    }
-}
-
-@Composable
-private fun SliderRow(
-    title: String,
-    value: Float,
-    valueRange: ClosedFloatingPointRange<Float>,
-    steps: Int,
-    valueLabel: String,
-    onValueChange: (Float) -> Unit,
-) {
-    Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)) {
-        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text(title, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-            Text(valueLabel, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        Slider(
-            value = value,
-            onValueChange = onValueChange,
-            valueRange = valueRange,
-            steps = steps,
-        )
     }
 }

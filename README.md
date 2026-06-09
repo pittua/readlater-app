@@ -15,7 +15,7 @@
 ![Room](https://img.shields.io/badge/DB-Room-FF6F00)
 ![Hilt](https://img.shields.io/badge/DI-Hilt-2196F3)
 
-### ⬇️ [最新版 APK をダウンロード（v0.1.0）](https://github.com/pittua/readlater-app/releases/latest)
+### ⬇️ [最新版 APK をダウンロード（v0.1.0）](https://github.com/pittua/Yomiato/releases/latest)
 
 </div>
 
@@ -82,8 +82,8 @@
 
 ```bash
 # 必要: Android SDK / JDK 17+
-git clone https://github.com/pittua/readlater-app.git
-cd readlater-app
+git clone https://github.com/pittua/Yomiato.git
+cd Yomiato
 ./gradlew :app:assembleDebug
 # 生成物: app/build/outputs/apk/debug/app-debug.apk
 ```
